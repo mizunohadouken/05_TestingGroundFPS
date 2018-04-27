@@ -16,7 +16,7 @@ public:
 	TArray<AActor*> GetPatrolWaypoints() const;
 
 private:
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditAnywhere)
 	TArray<AActor*> PatrolWaypoints;
 		
 	
