@@ -44,8 +44,13 @@ void ACPP_Mannequin::BeginPlay()
 	// Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
 	Gun = GetWorld()->SpawnActor<AGun>(GunBlueprint);
 	Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint")); //Attach gun mesh component to Skeleton, doing it here because the skelton is not yet created in the constructor
-
 	Gun->AnimInstance = Mesh1P->GetAnimInstance();
+
+	if (InputComponent != NULL)
+	{
+		InputComponent->BindAction("Fire", IE_Pressed, this, &ACPP_Mannequin::PullTrigger);
+	}
+
 }
 
 // Called every frame
@@ -60,9 +65,10 @@ void ACPP_Mannequin::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+
 }
 
-void ACPP_Mannequin::Fire()
+void ACPP_Mannequin::PullTrigger()
 {
 	Gun->OnFire();
 }
