@@ -98,7 +98,7 @@ void ATestingGroundsFPSCharacter::BeginPlay()
 		UE_LOG(LogTemp, Warning, TEXT("Gun blueprint missing"));
 		return;
 	}
-	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
+	// Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
 	Gun = GetWorld()->SpawnActor<AGun>(GunBlueprint);
 	Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
 //	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
