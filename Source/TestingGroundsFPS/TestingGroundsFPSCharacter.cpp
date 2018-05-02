@@ -105,7 +105,7 @@ void ATestingGroundsFPSCharacter::BeginPlay()
 
 	// Bind fire event
 	InputComponent->BindAction("Fire", IE_Pressed, Gun, &AGun::OnFire);
-	Gun->AnimInstance = Mesh1P->GetAnimInstance();
+	Gun->AnimInstance1p = Mesh1P->GetAnimInstance();
 
 
 

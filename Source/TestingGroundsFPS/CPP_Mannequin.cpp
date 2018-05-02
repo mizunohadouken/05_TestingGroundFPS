@@ -43,10 +43,20 @@ void ACPP_Mannequin::BeginPlay()
 	}
 	// Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
 	Gun = GetWorld()->SpawnActor<AGun>(GunBlueprint);
-	Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint")); //Attach gun mesh component to Skeleton, doing it here because the skelton is not yet created in the constructor
-	Gun->AnimInstance = Mesh1P->GetAnimInstance();
 
-	if (InputComponent != NULL)
+	if (IsPlayerControlled()) // 1st person
+	{
+		Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint")); //Attach gun mesh component to Skeleton, doing it here because the skelton is not yet created in the constructor
+	}
+	else
+	{
+		Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+	}
+
+	Gun->AnimInstance1p = Mesh1P->GetAnimInstance();
+	Gun->AnimInstance3p = GetMesh()->GetAnimInstance();
+
+	if (InputComponent != nullptr)
 	{
 		InputComponent->BindAction("Fire", IE_Pressed, this, &ACPP_Mannequin::PullTrigger);
 	}
@@ -65,6 +75,23 @@ void ACPP_Mannequin::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+
+}
+
+void ACPP_Mannequin::UnPossessed()
+{
+	Super::UnPossessed();
+	if (Gun != nullptr)
+	{
+		Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+
+		if (GetMesh())
+		{
+
+			UE_LOG(LogTemp, Warning, TEXT("unpossessed called by %s"), *GetName());
+			return;
+		}
+	}
 
 }
 
