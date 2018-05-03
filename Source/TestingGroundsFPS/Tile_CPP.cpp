@@ -2,6 +2,10 @@
 
 #include "Tile_CPP.h"
 
+//#include "GameFramework/Actor.h"
+#include "Engine/World.h"
+#include "DrawDebugHelpers.h"
+
 
 // Sets default values
 ATile_CPP::ATile_CPP()
@@ -11,17 +15,19 @@ ATile_CPP::ATile_CPP()
 
 }
 
-void ATile_CPP::PlaceActors()
+void ATile_CPP::PlaceActors(TSubclassOf<AActor> ToSpawn, int MinSpawn, int MaxSpawn)
 {
 	FVector Min(0, -2000, 0);
 	FVector Max(4000, 2000, 0);
 	FBox Bounds(Min, Max);
 
-	for (size_t i = 0; i < 20; i++)
+	int NumberToSpawn = FMath::RandRange(MinSpawn, MaxSpawn);
+	for (size_t i = 0; i < NumberToSpawn; i++)
 	{
 		FVector RandSpawnPoint = FMath::RandPointInBox(Bounds);
-//		UE_LOG(LogTemp, Warning, TEXT("SpawnPoint: %s"), *RandSpawnPoint.ToCompactString());
-		UE_LOG(LogTemp, Warning, TEXT("SpawnPoint: %s"), *RandSpawnPoint.ToString());
+		AActor* Spawned = GetWorld()->SpawnActor<AActor>(ToSpawn);
+		Spawned->SetActorRelativeLocation(RandSpawnPoint);
+		Spawned->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
 	}
 }
 
@@ -29,6 +35,9 @@ void ATile_CPP::PlaceActors()
 void ATile_CPP::BeginPlay()
 {
 	Super::BeginPlay();
+
+	CastSphere(GetActorLocation(), 300);
+	CastSphere(GetActorLocation() + FVector(0, 0, 1000), 300);
 	
 }
 
@@ -37,5 +46,25 @@ void ATile_CPP::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+bool ATile_CPP::CastSphere(FVector Location, float Radius)
+{
+	FHitResult HitResult;
+
+	bool HasHit = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		Location,
+
+		Location,
+		FQuat::Identity,
+		ECollisionChannel::ECC_Camera,
+		FCollisionShape::MakeSphere(Radius)
+	);
+
+	FColor ResultColor = HasHit ? FColor::Red : FColor::Green;
+	DrawDebugSphere(GetWorld(), Location, Radius, 100, ResultColor, true, 100);
+
+	return HasHit;
 }
 
