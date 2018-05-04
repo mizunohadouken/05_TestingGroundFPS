@@ -15,20 +15,49 @@ ATile_CPP::ATile_CPP()
 
 }
 
-void ATile_CPP::PlaceActors(TSubclassOf<AActor> ToSpawn, int MinSpawn, int MaxSpawn)
+void ATile_CPP::PlaceActors(TSubclassOf<AActor> ToSpawn, float MinScale, float MaxScale, int MinSpawn, int MaxSpawn, float radius)
+{
+	int NumberToSpawn = FMath::RandRange(MinSpawn, MaxSpawn);
+
+	for (size_t i = 0; i < NumberToSpawn; i++)
+	{
+		FVector SpawnPoint;
+		float RandomScale = FMath::RandRange(MinScale, MaxScale);
+		bool found = FindEmptyLocation(SpawnPoint, radius * RandomScale);
+		if (found)
+		{
+			float RandomRotation = FMath::RandRange(-180.0f, 180.0f);
+			PlaceActor(ToSpawn, SpawnPoint, RandomRotation, RandomScale);
+		}
+	}
+}
+
+bool ATile_CPP::FindEmptyLocation(FVector& OutLocation, float radius)
 {
 	FVector Min(0, -2000, 0);
 	FVector Max(4000, 2000, 0);
 	FBox Bounds(Min, Max);
-
-	int NumberToSpawn = FMath::RandRange(MinSpawn, MaxSpawn);
-	for (size_t i = 0; i < NumberToSpawn; i++)
+	
+	const int MAX_ATTEMPTS = 100;
+	for (size_t i = 0; i < MAX_ATTEMPTS; i++)
 	{
-		FVector RandSpawnPoint = FMath::RandPointInBox(Bounds);
-		AActor* Spawned = GetWorld()->SpawnActor<AActor>(ToSpawn);
-		Spawned->SetActorRelativeLocation(RandSpawnPoint);
-		Spawned->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
+		FVector CandidatePoint = FMath::RandPointInBox(Bounds);
+		if (CanSpawnAtLocation(CandidatePoint, radius))
+		{
+			OutLocation = CandidatePoint;
+			return true;
+		}
 	}
+	return false;
+}
+
+void ATile_CPP::PlaceActor(TSubclassOf<AActor> ToSpawn, FVector SpawnPoint, float rotation, float scale)
+{
+	AActor* Spawned = GetWorld()->SpawnActor<AActor>(ToSpawn);
+	Spawned->SetActorRelativeLocation(SpawnPoint);
+	Spawned->AttachToActor(this, FAttachmentTransformRules(EAttachmentRule::KeepRelative, false));
+	Spawned->SetActorRotation(FRotator(0, rotation, 0));
+	Spawned->SetActorScale3D(FVector(scale));
 }
 
 // Called when the game starts or when spawned
@@ -36,8 +65,8 @@ void ATile_CPP::BeginPlay()
 {
 	Super::BeginPlay();
 
-	CastSphere(GetActorLocation(), 300);
-	CastSphere(GetActorLocation() + FVector(0, 0, 1000), 300);
+	CanSpawnAtLocation(GetActorLocation(), 300);
+	CanSpawnAtLocation(GetActorLocation() + FVector(0, 0, 1000), 300);
 	
 }
 
@@ -48,23 +77,24 @@ void ATile_CPP::Tick(float DeltaTime)
 
 }
 
-bool ATile_CPP::CastSphere(FVector Location, float Radius)
+bool ATile_CPP::CanSpawnAtLocation(FVector Location, float Radius)
 {
 	FHitResult HitResult;
+	FVector GlobalLocation = ActorToWorld().TransformPosition(Location);
+
 
 	bool HasHit = GetWorld()->SweepSingleByChannel(
 		HitResult,
-		Location,
-
-		Location,
+		GlobalLocation,
+		GlobalLocation,
 		FQuat::Identity,
-		ECollisionChannel::ECC_Camera,
+		ECollisionChannel::ECC_GameTraceChannel2,
 		FCollisionShape::MakeSphere(Radius)
 	);
 
-	FColor ResultColor = HasHit ? FColor::Red : FColor::Green;
-	DrawDebugSphere(GetWorld(), Location, Radius, 100, ResultColor, true, 100);
+//	FColor ResultColor = HasHit ? FColor::Red : FColor::Green;
+//	DrawDebugCapsule(GetWorld(), GlobalLocation,0, Radius,FQuat::Identity, ResultColor, true, 100);
 
-	return HasHit;
+	return !HasHit;
 }
 
