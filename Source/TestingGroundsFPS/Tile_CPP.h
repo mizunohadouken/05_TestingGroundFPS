@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "ActorPool.h"
 
 #include "Tile_CPP.generated.h"
 
@@ -22,15 +23,23 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Pool")
+	void SetPool(UActorPool * InPool);
 
 private:
 
 	bool FindEmptyLocation(FVector& OutLocation, float radius);
 	void PlaceActor(TSubclassOf<AActor> ToSpawn, FVector SpawnPoint, float rotation, float scale);
 	bool CanSpawnAtLocation(FVector Location, float Radius);
+
+	void PositionNavMeshBoundsVolume();
 	
+	UActorPool* Pool;
+	AActor* NavMeshBoundsVolume;
 };
